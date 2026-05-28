@@ -710,6 +710,7 @@ body {
   border-radius: 30px;
   opacity: 0;
   animation: alarmPulse 1.5s ease-out infinite;
+  pointer-events: none;
 }
 .alarm-pulse-ring.delay1 { animation-delay: 0.5s; }
 
