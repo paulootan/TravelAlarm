@@ -1136,13 +1136,15 @@ function init() {
     }, 400);
   }, 1400);
 
+  // Bind events immediately so buttons always work
+  bindEvents();
+
   // Init maps (after DOM is visible)
   setTimeout(() => {
     initMaps();
     renderDestinationsList();
     renderActiveAlarmsList();
     loadSettingsUI();
-    bindEvents();
     registerServiceWorker();
 
     // Try to get initial location for map centering
