@@ -957,9 +957,8 @@ function bindEvents() {
   });
   document.getElementById('btn-stop-journey').addEventListener('click', stopGPSTracking);
 
-  // Alarm modal buttons
-  document.getElementById('btn-dismiss-alarm').addEventListener('click', dismissAlarm);
-  document.getElementById('btn-snooze').addEventListener('click', snoozeAlarm);
+  // Tap anywhere on alarm modal to dismiss
+  document.getElementById('alarm-modal').addEventListener('click', dismissAlarm);
 
   // Theme toggle
   document.getElementById('theme-toggle').addEventListener('click', () => {
@@ -1136,15 +1135,13 @@ function init() {
     }, 400);
   }, 1400);
 
-  // Bind events immediately so buttons always work
-  bindEvents();
-
   // Init maps (after DOM is visible)
   setTimeout(() => {
     initMaps();
     renderDestinationsList();
     renderActiveAlarmsList();
     loadSettingsUI();
+    bindEvents();
     registerServiceWorker();
 
     // Try to get initial location for map centering

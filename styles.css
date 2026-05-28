@@ -709,8 +709,8 @@ body {
   border: 2px solid var(--danger);
   border-radius: 30px;
   opacity: 0;
-  animation: alarmPulse 1.5s ease-out infinite;
   pointer-events: none;
+  animation: alarmPulse 1.5s ease-out infinite;
 }
 .alarm-pulse-ring.delay1 { animation-delay: 0.5s; }
 
@@ -737,23 +737,10 @@ body {
 }
 .alarm-distance { font-size: 0.9rem; color: var(--text-dim); }
 
-.alarm-actions { display: flex; gap: 10px; width: 100%; margin-top: 8px; }
-.btn-alarm-snooze {
-  flex: 1; background: var(--surface2); border: 1px solid var(--border);
-  border-radius: 12px; padding: 14px;
-  font-family: var(--font-display); font-size: 0.9rem; font-weight: 700;
-  color: var(--text-dim); cursor: pointer;
-  transition: all var(--transition);
+.alarm-tap-hint {
+  font-size: 0.82rem; color: var(--text-muted);
+  margin-top: 8px; letter-spacing: 0.04em;
 }
-.btn-alarm-snooze:hover { border-color: var(--warn); color: var(--warn); }
-.btn-alarm-dismiss {
-  flex: 1.5; background: var(--danger); border: none;
-  border-radius: 12px; padding: 14px;
-  font-family: var(--font-display); font-size: 0.9rem; font-weight: 700;
-  color: white; cursor: pointer;
-  transition: filter var(--transition);
-}
-.btn-alarm-dismiss:hover { filter: brightness(1.1); }
 
 /* --- Toast --- */
 .toast-container {
