@@ -479,21 +479,34 @@ function playAlarmTone(toneType) {
 }
 
 function stopAlarmTone() {
+  // Clear repeating audio interval
   if (State.alarmAudioNode) {
     clearInterval(State.alarmAudioNode);
     State.alarmAudioNode = null;
   }
+  // Clear vibration interval
   if (State.alarmInterval) {
     clearInterval(State.alarmInterval);
     State.alarmInterval = null;
   }
+  // Stop vibration
   if (navigator.vibrate) navigator.vibrate(0);
+  // Stop speech
   if (window.speechSynthesis) window.speechSynthesis.cancel();
+  // Suspend AudioContext to silence any still-playing nodes
+  if (State.audioContext && State.audioContext.state === 'running') {
+    State.audioContext.suspend().catch(() => {});
+  }
 }
 
 function dismissAlarm() {
   stopAlarmTone();
-  document.getElementById('alarm-modal').classList.add('hidden');
+  // Resume AudioContext so it's ready for next alarm
+  if (State.audioContext && State.audioContext.state === 'suspended') {
+    State.audioContext.resume().catch(() => {});
+  }
+  const modal = document.getElementById('alarm-modal');
+  modal.classList.add('hidden');
   State.currentAlarmDestId = null;
 }
 
@@ -502,7 +515,7 @@ function snoozeAlarm() {
   if (id) {
     const snoozeMs = State.settings.snooze * 60 * 1000;
     State.snoozedAlarms[id] = Date.now() + snoozeMs;
-    showToast(`Snoozed for ${State.settings.snooze} minutes`, 'info');
+    showToast(`Snoozed for ${State.settings.snooze} min`, 'info');
   }
   dismissAlarm();
 }
