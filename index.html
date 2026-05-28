@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#0f1923" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Travel Alarm" />
+  <meta name="description" content="Get alerted before you reach your destination. Never miss your stop again." />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <link rel="icon" type="image/png" href="icons/icon-192.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="styles.css" />
+  <title>Travel Arrival Alarm</title>
+</head>
+<body data-theme="dark">
+
+<!-- Splash Screen -->
+<div id="splash-screen">
+  <div class="splash-inner">
+    <div class="splash-icon">
+      <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="40" cy="40" r="38" stroke="#00d4ff" stroke-width="2" opacity="0.3"/>
+        <circle cx="40" cy="40" r="28" stroke="#00d4ff" stroke-width="2" opacity="0.6"/>
+        <circle cx="40" cy="40" r="8" fill="#00d4ff"/>
+        <path d="M40 14 L40 26 M40 54 L40 66 M14 40 L26 40 M54 40 L66 40" stroke="#00d4ff" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <h1 class="splash-title">Travel Alarm</h1>
+    <p class="splash-sub">Arrival detection, perfected</p>
+    <div class="splash-loader"><div></div></div>
+  </div>
+</div>
+
+<!-- Install Banner -->
+<div id="install-banner" class="install-banner hidden">
+  <div class="install-banner-inner">
+    <span>📲 Install for best experience</span>
+    <button id="install-btn" class="btn-install">Install</button>
+    <button id="install-dismiss" class="btn-dismiss">✕</button>
+  </div>
+</div>
+
+<!-- Main App -->
+<div id="app" class="app hidden">
+
+  <!-- Header -->
+  <header class="app-header">
+    <div class="header-left">
+      <div class="app-logo">
+        <svg viewBox="0 0 32 32" fill="none" width="28" height="28">
+          <circle cx="16" cy="16" r="14" stroke="var(--accent)" stroke-width="1.5" opacity="0.4"/>
+          <circle cx="16" cy="16" r="9" stroke="var(--accent)" stroke-width="1.5" opacity="0.7"/>
+          <circle cx="16" cy="16" r="4" fill="var(--accent)"/>
+        </svg>
+      </div>
+      <span class="app-title">Travel Alarm</span>
+    </div>
+    <div class="header-right">
+      <div id="gps-indicator" class="status-dot" title="GPS Status"></div>
+      <button id="theme-toggle" class="icon-btn" aria-label="Toggle theme">
+        <svg id="theme-icon-dark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+        <svg id="theme-icon-light" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20" style="display:none"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Pages -->
+  <main class="app-main">
+
+    <!-- === DASHBOARD PAGE === -->
+    <section id="page-dashboard" class="page active">
+      <div class="page-content">
+
+        <!-- Status Cards Row -->
+        <div class="status-row">
+          <div class="status-card" id="card-gps">
+            <div class="status-card-icon">📡</div>
+            <div class="status-card-info">
+              <span class="status-card-label">GPS</span>
+              <span class="status-card-value" id="gps-status-text">—</span>
+            </div>
+          </div>
+          <div class="status-card" id="card-speed">
+            <div class="status-card-icon">⚡</div>
+            <div class="status-card-info">
+              <span class="status-card-label">Speed</span>
+              <span class="status-card-value" id="speed-value">0 km/h</span>
+            </div>
+          </div>
+          <div class="status-card" id="card-accuracy">
+            <div class="status-card-icon">🎯</div>
+            <div class="status-card-info">
+              <span class="status-card-label">Accuracy</span>
+              <span class="status-card-value" id="accuracy-value">—</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Map Container -->
+        <div class="map-wrapper">
+          <div id="map"></div>
+          <div class="map-overlay-top">
+            <div id="tracking-badge" class="tracking-badge inactive">
+              <span class="badge-dot"></span>
+              <span id="tracking-badge-text">Not Tracking</span>
+            </div>
+          </div>
+          <button id="center-map-btn" class="map-fab" title="Center on location">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg>
+          </button>
+        </div>
+
+        <!-- Active Destinations -->
+        <div class="section-header">
+          <h2 class="section-title">Active Alarms</h2>
+          <span id="active-count" class="badge-count">0</span>
+        </div>
+
+        <div id="active-alarms-list" class="alarms-list">
+          <div class="empty-state" id="no-alarms-msg">
+            <div class="empty-icon">🗺️</div>
+            <p>No active alarms</p>
+            <span>Add a destination to get started</span>
+          </div>
+        </div>
+
+        <!-- Start/Stop Journey -->
+        <div class="journey-controls">
+          <button id="btn-start-journey" class="btn-journey start">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22"><polygon points="5,3 19,12 5,21"/></svg>
+            Start Tracking
+          </button>
+          <button id="btn-stop-journey" class="btn-journey stop hidden">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22"><rect x="6" y="6" width="12" height="12"/></svg>
+            Stop Tracking
+          </button>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- === ADD DESTINATION PAGE === -->
+    <section id="page-add" class="page">
+      <div class="page-content">
+        <h2 class="page-heading">Add Destination</h2>
+
+        <!-- Search Bar -->
+        <div class="search-container">
+          <div class="search-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+            <input type="text" id="place-search" placeholder="Search for a place…" autocomplete="off" />
+            <button id="clear-search" class="clear-btn hidden">✕</button>
+          </div>
+          <div id="search-results" class="search-results hidden"></div>
+        </div>
+
+        <p class="tip-text">💡 Or tap anywhere on the map to drop a pin</p>
+
+        <!-- Add Map -->
+        <div class="add-map-wrapper">
+          <div id="add-map"></div>
+          <div id="pin-preview" class="pin-preview hidden">
+            <div class="pin-pulse"></div>
+          </div>
+        </div>
+
+        <!-- Destination Form -->
+        <div class="dest-form card">
+          <div class="form-group">
+            <label>Destination Name</label>
+            <input type="text" id="dest-name" placeholder="e.g. Mumbai Central Station" />
+          </div>
+          <div class="form-row">
+            <div class="form-group half">
+              <label>Latitude</label>
+              <input type="number" id="dest-lat" placeholder="0.000000" step="0.000001" />
+            </div>
+            <div class="form-group half">
+              <label>Longitude</label>
+              <input type="number" id="dest-lng" placeholder="0.000000" step="0.000001" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Alert Distance</label>
+            <div class="distance-selector">
+              <button class="dist-btn active" data-dist="500">500m</button>
+              <button class="dist-btn" data-dist="1000">1 km</button>
+              <button class="dist-btn" data-dist="2000">2 km</button>
+              <button class="dist-btn" data-dist="5000">5 km</button>
+              <button class="dist-btn custom-dist" data-dist="custom">Custom</button>
+            </div>
+            <input type="number" id="custom-distance" class="custom-dist-input hidden" placeholder="Distance in meters" min="100" max="50000" />
+          </div>
+          <div class="form-group">
+            <label>Alarm Tone</label>
+            <select id="alarm-tone">
+              <option value="beep">Classic Beep</option>
+              <option value="chime">Chime</option>
+              <option value="siren">Alert Siren</option>
+              <option value="bell">Bell Ring</option>
+              <option value="custom">Upload Custom…</option>
+            </select>
+            <input type="file" id="custom-tone-file" accept="audio/*" class="hidden" />
+          </div>
+          <div class="form-group">
+            <label>Travel Mode</label>
+            <div class="mode-selector">
+              <button class="mode-btn active" data-mode="driving">🚗 Driving</button>
+              <button class="mode-btn" data-mode="train">🚆 Train</button>
+              <button class="mode-btn" data-mode="walking">🚶 Walking</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Notes (optional)</label>
+            <input type="text" id="dest-notes" placeholder="Exit at platform 3…" />
+          </div>
+          <button id="btn-save-dest" class="btn-primary">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18"><polyline points="20 6 9 17 4 12"/></svg>
+            Save Destination
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- === HISTORY PAGE === -->
+    <section id="page-history" class="page">
+      <div class="page-content">
+        <div class="page-header-row">
+          <h2 class="page-heading">Saved Destinations</h2>
+          <button id="btn-export" class="icon-text-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+            Export
+          </button>
+        </div>
+        <div id="destinations-list" class="destinations-list">
+          <div class="empty-state">
+            <div class="empty-icon">📍</div>
+            <p>No saved destinations</p>
+            <span>Your saved destinations will appear here</span>
+          </div>
+        </div>
+        <label class="import-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+          Import Destinations
+          <input type="file" id="import-file" accept=".json" class="hidden" />
+        </label>
+      </div>
+    </section>
+
+    <!-- === SETTINGS PAGE === -->
+    <section id="page-settings" class="page">
+      <div class="page-content">
+        <h2 class="page-heading">Settings</h2>
+
+        <div class="settings-group card">
+          <h3 class="settings-group-title">GPS Tracking</h3>
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="setting-label">High Accuracy Mode</span>
+              <span class="setting-desc">Better accuracy, higher battery use</span>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="setting-high-accuracy" checked />
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="setting-label">Update Interval</span>
+              <span class="setting-desc" id="interval-desc">Every 3 seconds</span>
+            </div>
+            <input type="range" id="setting-interval" min="1" max="10" value="3" class="range-input" />
+          </div>
+        </div>
+
+        <div class="settings-group card">
+          <h3 class="settings-group-title">Alarm</h3>
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="setting-label">Vibration</span>
+              <span class="setting-desc">Vibrate on alarm trigger</span>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="setting-vibration" checked />
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="setting-label">Voice Announcement</span>
+              <span class="setting-desc">Speak destination name aloud</span>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="setting-voice" checked />
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="setting-label">Snooze Duration</span>
+              <span class="setting-desc" id="snooze-desc">5 minutes</span>
+            </div>
+            <select id="setting-snooze" class="setting-select">
+              <option value="2">2 min</option>
+              <option value="5" selected>5 min</option>
+              <option value="10">10 min</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="settings-group card">
+          <h3 class="settings-group-title">App</h3>
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="setting-label">Theme</span>
+              <span class="setting-desc">App appearance</span>
+            </div>
+            <select id="setting-theme" class="setting-select">
+              <option value="dark" selected>Dark</option>
+              <option value="light">Light</option>
+            </select>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="setting-label">Wake Lock</span>
+              <span class="setting-desc">Keep screen on while tracking</span>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="setting-wakelock" checked />
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="settings-group card">
+          <h3 class="settings-group-title">Permissions</h3>
+          <button class="btn-perm" id="btn-perm-gps">📡 Request GPS Permission</button>
+          <button class="btn-perm" id="btn-perm-notif">🔔 Request Notification Permission</button>
+        </div>
+
+        <div class="settings-group card warning-card">
+          <h3 class="settings-group-title">⚠️ Background Tracking Notice</h3>
+          <p class="warning-text">Background GPS tracking depends on your browser and OS settings. For best results: install as PWA, keep screen on, and disable battery optimization for your browser.</p>
+        </div>
+
+        <button id="btn-clear-data" class="btn-danger">🗑️ Clear All Data</button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Bottom Navigation -->
+  <nav class="bottom-nav">
+    <button class="nav-btn active" data-page="dashboard">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span>Home</span>
+    </button>
+    <button class="nav-btn" data-page="add">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+      <span>Add</span>
+    </button>
+    <button class="nav-btn" data-page="history">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+      <span>Saved</span>
+    </button>
+    <button class="nav-btn" data-page="settings">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+      <span>Settings</span>
+    </button>
+  </nav>
+
+</div><!-- /#app -->
+
+<!-- ALARM MODAL -->
+<div id="alarm-modal" class="alarm-modal hidden">
+  <div class="alarm-modal-bg"></div>
+  <div class="alarm-modal-content">
+    <div class="alarm-pulse-ring"></div>
+    <div class="alarm-pulse-ring delay1"></div>
+    <div class="alarm-icon">📍</div>
+    <h2 class="alarm-title">Approaching Destination!</h2>
+    <p class="alarm-dest-name" id="alarm-dest-name">Mumbai Central</p>
+    <p class="alarm-distance" id="alarm-distance-text">0.5 km away</p>
+    <div class="alarm-actions">
+      <button id="btn-snooze" class="btn-alarm-snooze">😴 Snooze</button>
+      <button id="btn-dismiss-alarm" class="btn-alarm-dismiss">✓ Dismiss</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast-container" class="toast-container"></div>
+
+<!-- SCRIPTS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
